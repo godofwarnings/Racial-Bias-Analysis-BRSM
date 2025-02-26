@@ -1,0 +1,708 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+# Tests For Search Rate
+```{r}
+data <- read.csv("/home/radhikesh/Documents/iiith/sem6/BRSM/Project/data_pp/results_searches_stack_ratio_h3.csv")
+summary(data)
+
+data$Subject_Race <- factor(data$Subject_Race,
+                         levels=unique(data$Subject_Race))
+
+data$Search_by_Stop <- floor(data$Search_by_Stop*100)
+# This is done becuase Chi-square test is not meant for ratios. so we convert it to numbers.
+
+data
+
+contingency_table <- matrix(data = c(data$Search_by_Stop), ncol = 16, byrow = TRUE)
+contingency_table
+colnames(contingency_table) <- c('CT', 'RI', 'CA', 'AZ', 'MO', 'WI', 'NC', 'CO', 'TX', 'LA', 'MT', 'MD', 'VT', 'PA', 'TN', 'MA')
+rownames(contingency_table) <- c('white','hispanic', 'black', 'asian/pacific islander')
+
+contingency_table <- as.table(contingency_table)
+
+chisq.test(contingency_table)
+```
+```{r, fig.height=6,fig.width=10}
+library("gplots")
+balloonplot(t(contingency_table), main ="Search Rate", xlab ="", ylab="",
+            label = FALSE, show.margins = FALSE)
+```
+
+```{r, fig.height=10,fig.width=10}
+library("graphics")
+mosaicplot(contingency_table, shade = TRUE, las=2,
+           main = "Search Rate")
+```
+```{r}
+library(coin)
+library("dplyr") 
+library(car)
+
+data <- read.csv("/home/radhikesh/Documents/iiith/sem6/BRSM/Project/data_pp/results_searches_stack_ratio_h3.csv")
+summary(data)
+
+data$Subject_Race <- factor(data$Subject_Race,
+                         levels=unique(data$Subject_Race))
+
+
+levene_test <- leveneTest(Search_by_Stop ~ Subject_Race, data = data)
+print(levene_test)
+
+shapiro_test_results <- by(data$Search_by_Stop, data$Subject_Race, shapiro.test)
+print(shapiro_test_results)
+
+kruskal_test <- kruskal.test(Search_by_Stop ~ Subject_Race, data = data)
+print(kruskal_test)
+```
+
+```{r}
+library(dunn.test)
+
+dunn_test_result <- dunn.test::dunn.test(data$Search_by_Stop, data$Subject_Race, method = "bonferroni")
+
+print(dunn_test_result)
+```
+```{r}
+library(rcompanion)
+
+PT = pairwisePermutationTest(Search_by_Stop ~ Subject_Race,
+                             data     = data,
+                             method   = "BH")
+
+PT
+```
+
+```{r}
+data <- read.csv("/home/radhikesh/Documents/iiith/sem6/BRSM/Project/data_pp/results_searches_stack_ratio_h3.csv")
+summary(data)
+
+data$Subject_Race <- factor(data$Subject_Race,
+                         levels=unique(data$Subject_Race))
+
+# Create a palette of colors
+colors <- c("skyblue", "lightgreen", "salmon", "yellow")
+
+# Create boxplot with customized colors
+boxplot(Search_by_Stop ~ Subject_Race, data = data,
+        col = colors,
+        border = "black",
+        main = "Boxplot",
+        xlab = "Race", ylab = "Value")
+
+# Add grid lines
+grid()
+
+plot <- ggplot(data, aes(x = Subject_Race, y = Search_by_Stop, fill = Subject_Race)) +
+  geom_violin(trim = FALSE, draw_quantiles = c(0.25, 0.5, 0.75)) +
+  geom_boxplot(width = 0.1, fill = "white", color = "black") +
+  scale_fill_manual(values = colors) +  # Customize fill colors
+  theme_minimal() +  # Apply a minimal theme
+  labs(title = "Search Rate", x = "Subject Race", y = "Search Rate")
+
+png("violin_plot_search_rate.png", width = 1920, height = 1080, units = "px", res = 300)  # Set dimensions and resolution
+print(plot)
+dev.off()
+```
+# Hit Rate
+```{r}
+data <- read.csv("/home/radhikesh/Documents/iiith/sem6/BRSM/Project/data_pp/results_contraband_found_search_stack_ratio_h3.csv")
+
+data$Subject_Race <- factor(data$Subject_Race,
+                         levels=unique(data$Subject_Race))
+
+data$Contraband_by_Search <- floor(data$Contraband_by_Search*100)
+
+print(data)
+
+contingency_table <- matrix(data = c(data$Contraband_by_Search), ncol = 15, byrow = TRUE)
+contingency_table
+colnames(contingency_table) <- c('CT', 'RI', 'CA', 'AZ', 'MO', 'WI', 'NC', 'CO', 'TX', 'LA', 'MD', 'VT', 'PA', 'TN', 'MA')
+rownames(contingency_table) <- c('white','hispanic', 'black', 'asian/pacific islander')
+
+contingency_table <- as.table(contingency_table)
+print(contingency_table)
+
+chi_square_test <- chisq.test(contingency_table)
+print(chi_square_test)
+```
+
+```{r, fig.height=6,fig.width=10}
+library("gplots")
+balloonplot(t(contingency_table), main ="Hit Rate", xlab ="", ylab="",
+            label = FALSE, show.margins = FALSE)
+```
+
+```{r, fig.height=10,fig.width=10}
+library("graphics")
+mosaicplot(contingency_table, shade = TRUE, las=2,
+           main = "Hit Rate")
+```
+
+```{r}
+library(coin)
+library("dplyr") 
+library(car)
+
+data <- read.csv("/home/radhikesh/Documents/iiith/sem6/BRSM/Project/data_pp/results_contraband_found_search_stack_ratio_h3.csv")
+
+data$Subject_Race <- factor(data$Subject_Race,
+                         levels=unique(data$Subject_Race))
+
+
+levene_test <- leveneTest(Contraband_by_Search ~ Subject_Race, data = data)
+print(levene_test)
+
+shapiro_test_results <- by(data$Contraband_by_Search, data$Subject_Race, shapiro.test)
+print(shapiro_test_results)
+
+# Perform one-way ANOVA
+anova_result <- aov(Contraband_by_Search ~ Subject_Race, data = data)
+
+# Print the ANOVA table
+print(summary(anova_result))
+```
+
+```{r}
+library(dunn.test)
+
+dunn_test_result <- dunn.test::dunn.test(data$Contraband_by_Search, data$Subject_Race, method = "bonferroni")
+
+print(dunn_test_result)
+```
+```{r}
+library(rcompanion)
+
+PT = pairwisePermutationTest(Contraband_by_Search ~ Subject_Race,
+                             data     = data,
+                             method   = "BH")
+
+PT
+```
+
+```{r}
+data <- read.csv("/home/radhikesh/Documents/iiith/sem6/BRSM/Project/data_pp/results_contraband_found_search_stack_ratio_h3.csv")
+
+data$Subject_Race <- factor(data$Subject_Race,
+                         levels=unique(data$Subject_Race))
+
+# Create a palette of colors
+colors <- c("skyblue", "lightgreen", "salmon", "yellow")
+
+# Create boxplot with customized colors
+boxplot(Contraband_by_Search ~ Subject_Race, data = data,
+        col = colors,
+        border = "black",
+        main = "Hit Rate",
+        xlab = "Race", ylab = "Value")
+
+# Add grid lines
+grid()
+
+# Load the ggplot2 package for plotting
+library(ggplot2)
+
+# Create violin plot
+plot <- ggplot(data, aes(x = Subject_Race, y = Contraband_by_Search, fill = Subject_Race)) +
+  geom_violin(trim = FALSE, draw_quantiles = c(0.25, 0.5, 0.75)) +
+  geom_boxplot(width = 0.1, fill = "white", color = "black") +
+  scale_fill_manual(values = colors) +  # Customize fill colors
+  theme_minimal() +  # Apply a minimal theme
+  labs(title = "Hit Rate", x = "Subject Race", y = "Hit Rate")  # Add labels
+
+png("violin_plot_hit_rate.png", width = 1920, height = 1080, units = "px", res = 300)  # Set dimensions and resolution
+print(plot)
+dev.off()
+
+```
+
+# asdas
+```{r}
+data <- read.csv("/home/radhikesh/Documents/iiith/sem6/BRSM/Project/data_pp/results_contraband_found_search_stack_ratio_h3.csv")
+
+data$Subject_Race <- factor(data$Subject_Race,
+                         levels=unique(data$Subject_Race))
+
+data$Contraband_by_Search <- floor(data$Contraband_by_Search*100)
+
+print(data)
+
+contingency_table <- matrix(data = c(data$Contraband_by_Search), ncol = 15, byrow = TRUE)
+contingency_table
+colnames(contingency_table) <- c('CT', 'RI', 'CA', 'AZ', 'MO', 'WI', 'NC', 'CO', 'TX', 'LA', 'MD', 'VT', 'PA', 'TN', 'MA')
+rownames(contingency_table) <- c('white','hispanic', 'black', 'asian/pacific islander')
+
+contingency_table <- as.table(contingency_table)
+print(contingency_table)
+
+chi_square_test <- chisq.test(contingency_table)
+print(chi_square_test)
+```
+```{r, fig.height=6,fig.width=10}
+library("gplots")
+balloonplot(t(contingency_table), main ="Hit Rate", xlab ="", ylab="",
+            label = FALSE, show.margins = FALSE)
+```
+```{r, fig.height=10,fig.width=10}
+library("graphics")
+mosaicplot(contingency_table, shade = TRUE, las=2,
+           main = "Contraband Found Rate")
+```
+
+```{r}
+library(coin)
+
+oneway_test(Contraband_by_Search ~ Subject_Race,
+            data = data)
+```
+
+```{r}
+library(rcompanion)
+
+PT = pairwisePermutationTest(Contraband_by_Search ~ Subject_Race,
+                             data     = data,
+                             method   = "fdr")
+
+PT
+```
+
+```{r}
+# Load required libraries
+library(perm)
+
+# Directory containing CSV files
+directory <- "/home/radhikesh/Documents/iiith/sem6/BRSM/Project/data_pp/data_h2/"  # Replace with your directory path
+
+# List of CSV file paths
+file_paths <- list.files(directory, pattern = "\\.csv$", full.names = TRUE)
+
+# List to store data frames
+data_list <- list()
+
+selected_columns <- c('subject_race', 'search_conducted')
+
+for (i in 1:length(file_paths)) {
+  data <- read.csv(file_paths[i])
+  data_list[[i]] <- data[selected_columns]
+}
+
+# Combine the data
+combined_data <- list()
+group_vector <- c()
+
+for (i in 1:length(data_list)) {
+  combined_data <- c(combined_data, list(data_list[[i]]$search_conducted))
+  group_vector <- c(group_vector, rep(i, nrow(data_list[[i]])))
+}
+
+com
+
+# Permutation test using permKS
+perm_test_results <- permKS(y = combined_data, group = group_vector, nperm = 1000)
+
+# Get the p-value
+p_value <- perm_test_results$p.value
+
+# Print the p-value
+print(p_value)
+```
+
+```{r}
+
+
+# Load necessary libraries
+library(ggplot2)
+
+# Read the data from the CSV file
+data <- read.csv("hartford.csv")
+
+# Assuming 'subject_race' is the column you're interested in
+# Check if 'subject_race' column exists to avoid errors
+if("subject_race" %in% colnames(data)){
+  
+  # Plotting the distribution of the 'subject_race' column
+  ggplot(data, aes(x = subject_race)) +
+    geom_bar() + 
+    theme_minimal() +
+    labs(title = "Distribution of Subject Race",
+         x = "Race",
+         y = "Count") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) # This rotates the x-axis labels for better readability
+  
+} else {
+  cat("The column 'subject_race' does not exist in the dataset.")
+}
+
+
+
+```
+
+
+```{r}
+
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+ # Ensure strings are read as characters
+
+# Filter data where 'search_conducted' is TRUE
+# Adjust this line if 'search_conducted' is not a logical column
+data_search_conducted <- filter(data, search_conducted == TRUE)
+
+# Check if 'subject_race' column exists to avoid errors
+if("subject_race" %in% colnames(data_search_conducted)) {
+  
+  # Plotting the distribution of 'subject_race' for the filtered data
+  ggplot(data_search_conducted, aes(x = subject_race)) +
+    geom_bar() + 
+    theme_minimal() +
+    labs(title = "Distribution of Subject Race where Search was Conducted",
+         x = "Race",
+         y = "Count") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) # This rotates the x-axis labels for better readability
+  
+} else {
+  cat("The column 'subject_race' does not exist in the dataset.")
+}
+
+
+```
+
+```{r}
+
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+
+# List of CSV files
+file_paths <- c("statewide.csv", "hartford.csv")
+
+# Initialize a list to store dataframes
+data_list <- list()
+
+# Read each CSV file into a dataframe and store it in the list
+for (file_path in file_paths) {
+  data <- read.csv(file_path)
+  data_list[[file_path]] <- data
+}
+
+# Combine dataframes if necessary (e.g., using rbind or cbind)
+
+# Perform data analysis on each dataframe
+i <- 0
+for (file_path in file_paths) {
+  data <- data_list[[file_path]]
+  
+  # Example analysis (replace this with your actual analysis)
+  data$search_conducted <- as.logical(data$search_conducted)
+
+  race_summary <- data %>%
+    group_by(subject_race) %>%
+    summarise(
+      Total_Count = n(),
+      Search_Conducted_Count = sum(search_conducted, na.rm = TRUE)
+    ) %>%
+    mutate(Ratio = Search_Conducted_Count / Total_Count)
+  
+# Check if both 'subject_race' and 'search_conducted' columns exist to avoid errors
+if(all(c("subject_race", "search_conducted") %in% colnames(data))) {
+  
+  # Calculating the total count and search conducted count by race
+  race_summary <- data %>%
+    group_by(subject_race) %>%
+    summarise(
+      Total_Count = n(),
+      Search_Conducted_Count = sum(search_conducted, na.rm = TRUE)
+    ) %>%
+    mutate(Ratio = Search_Conducted_Count / Total_Count)
+  
+  # Plotting the ratio of search conducted for each race
+  a <- ggplot(race_summary, aes(x = subject_race, y = Ratio, fill = subject_race)) +
+    geom_bar(stat = "identity") +
+    theme_minimal() +
+    labs(title = "Ratio of Searches Conducted to Total Instances by Race",
+         x = "Race",
+         y = "Ratio") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) # This rotates the x-axis labels for better readability
+  j <- paste0(i, '.png')
+  ggsave(j, plot = a)
+  
+} else {
+  cat("The necessary columns do not exist in the dataset.")
+}
+  i <- i+1
+  # Your analysis code goes here
+}
+
+
+# Ensure 'search_conducted' is treated as logical if it's not already
+
+
+
+```
+
+
+```{r}
+
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+
+# Read the data from the CSV file
+
+# Ensure 'subject_race' and 'outcome' are treated as factors
+data$subject_race <- as.factor(data$subject_race)
+data$outcome <- as.factor(data$outcome)
+
+# Check if both 'subject_race' and 'outcome' columns exist to avoid errors
+if(all(c("subject_race", "outcome") %in% colnames(data))) {
+  
+  # Plotting
+  ggplot(data, aes(x = subject_race, fill = outcome)) +
+    geom_bar(position = "stack") +
+    theme_minimal() +
+    labs(title = "Outcomes by Subject Race",
+         x = "Race",
+         y = "Count") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) # Improve readability of x-axis labels
+  
+} else {
+  cat("The necessary columns ('subject_race' and/or 'outcome') do not exist in the dataset.")
+}
+
+
+```
+
+
+
+```{r}
+
+# Load necessary libraries
+library(dplyr)
+ 
+
+data$time <- as.POSIXct(data$time, format = "%H:%M:%S")
+
+
+
+# Check if 'time' column exists to avoid errors
+if ("time" %in% colnames(data)) {
+  
+  # Create a new column with the hour information
+  data <- data %>%
+    mutate(hour = format(time, "%H:00:00"))
+  
+  # Count the number of points for each hour
+  hour_counts <- data %>%
+    group_by(hour) %>%
+    summarise(count = n())
+  
+  # Print or plot the results
+  print(hour_counts)
+  
+  # If you want to plot the results, you can use ggplot2
+  library(ggplot2)
+  ggplot(hour_counts, aes(x = hour, y = count)) +
+    geom_bar(stat = "identity") +
+    theme_minimal() +
+    labs(title = "Number of Points by Hour",
+         x = "Hour",
+         y = "Count") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) # This rotates the x-axis labels for better readability
+  
+} else {
+  cat("The column 'time' does not exist in the dataset.")
+}
+
+
+
+```
+
+```{r}
+
+
+# Check if 'subject_sex' column exists to avoid errors
+if ("subject_sex" %in% colnames(data)) {
+  
+  # Plotting
+  ggplot(data, aes(x = subject_sex)) +
+    geom_bar() +
+    theme_minimal() +
+    labs(title = "Number of Subjects by Sex",
+         x = "Sex",
+         y = "Count") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) # This rotates the x-axis labels for better readability
+  
+} else {
+  cat("The column 'subject_sex' does not exist in the dataset.")
+}
+
+
+```
+
+
+```{r}
+# Load necessary libraries
+
+# Check if 'subject_age' column exists to avoid errors
+if ("subject_age" %in% colnames(data)) {
+  
+  # Create age ranges
+  age_ranges <- seq(0, 100, by = 5)
+  
+  # Create a new column with the age range for each subject
+  data <- data %>%
+    mutate(age_range = cut(subject_age, breaks = c(age_ranges, Inf), labels = age_ranges, include.lowest = TRUE, right = FALSE))
+  
+  # Count the number of subjects in each age range
+  age_counts <- data %>%
+    group_by(age_range) %>%
+    summarise(count = n())
+  
+  # Plotting
+  ggplot(age_counts, aes(x = as.factor(age_range), y = count)) +
+    geom_bar(stat = "identity") +
+    theme_minimal() +
+    labs(title = "Number of Subjects by Age Range",
+         x = "Age Range",
+         y = "Count") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) # This rotates the x-axis labels for better readability
+  
+} else {
+  cat("The column 'subject_age' does not exist in the dataset.")
+}
+
+```
+
+#Chi-Square test for Racial Disparity
+
+```{r}
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+
+# Assuming 'data' is your dataset containing the columns mentioned
+
+# Filter the data to include only rows where arrest_made is TRUE or FALSE
+filtered_data <- data %>%
+  filter(!is.na(arrest_made))  # Remove rows with NA in arrest_made (if any)
+
+# Create a contingency table of arrest_made and subject_race
+arrest_race_table <- table(filtered_data$subject_race, filtered_data$arrest_made)
+
+# Perform chi-square test
+chi_sq_result <- chisq.test(arrest_race_table)
+
+# Output the chi-square test result
+print(chi_sq_result)
+
+# If the chi-square test indicates significant results, you can interpret and plot the data
+# For example, plotting the arrest rate by race
+arrest_summary <- filtered_data %>%
+  group_by(subject_race, arrest_made) %>%
+  summarise(count = n()) %>%
+  mutate(arrest_rate = count / sum(count))
+
+# Plotting the arrest rate by race
+ggplot(arrest_summary, aes(x = subject_race, y = arrest_rate, fill = arrest_made)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Arrest Rate by Race",
+       x = "Race",
+       y = "Arrest Rate") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+
+
+```
+
+## Gender
+```{r}
+
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+
+
+# Ensure 'search_conducted' is treated as logical if it's not already
+data$search_conducted <- as.logical(data$search_conducted)
+
+# Check if both 'subject_race' and 'search_conducted' columns exist to avoid errors
+if(all(c("subject_sex", "search_conducted") %in% colnames(data))) {
+  
+  # Calculating the total count and search conducted count by race
+  race_summary <- data %>%
+    group_by(subject_sex) %>%
+    summarise(
+      Total_Count = n(),
+      Search_Conducted_Count = sum(search_conducted, na.rm = TRUE)
+    ) %>%
+    mutate(Ratio = Search_Conducted_Count / Total_Count)
+  
+  # Plotting the ratio of search conducted for each race
+  ggplot(race_summary, aes(x = subject_sex, y = Ratio, fill = subject_sex)) +
+    geom_bar(stat = "identity") +
+    theme_minimal() +
+    labs(title = "Ratio of Searches Conducted to Total Instances by Sex",
+         x = "Sex",
+         y = "Ratio") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) # This rotates the x-axis labels for better readability
+  
+} else {
+  cat("The necessary columns do not exist in the dataset.")
+}
+
+
+
+
+
+# Chi-Square Test for gender
+```
+
+```{r}
+
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+
+# Assuming 'data' is your dataset containing the columns mentioned
+
+# Filter the data to include only rows where arrest_made is TRUE or FALSE
+filtered_data <- data %>%
+  filter(!is.na(arrest_made))  # Remove rows with NA in arrest_made (if any)
+
+# Create a contingency table of arrest_made and subject_sex (gender)
+arrest_gender_table <- table(filtered_data$subject_sex, filtered_data$arrest_made)
+
+# Perform chi-square test
+chi_sq_result <- chisq.test(arrest_gender_table)
+
+# Output the chi-square test result
+print(chi_sq_result)
+
+# If the chi-square test indicates significant results, you can interpret and plot the data
+# For example, plotting the arrest rate by gender
+arrest_summary <- filtered_data %>%
+  group_by(subject_sex, arrest_made) %>%
+  summarise(count = n()) %>%
+  mutate(arrest_rate = count / sum(count))
+
+# Plotting the arrest rate by gender
+ggplot(arrest_summary, aes(x = subject_sex, y = arrest_rate, fill = arrest_made)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Arrest Rate by Gender",
+       x = "Gender",
+       y = "Arrest Rate") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5))  # Adjust angle for x-axis labels
+
+```

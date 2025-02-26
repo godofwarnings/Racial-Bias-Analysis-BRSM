@@ -1,0 +1,279 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+# Chi Square test for Search Rate
+
+```{r}
+data <- read.csv("/home/radhikesh/Documents/iiith/sem6/BRSM/Project/data_pp/results_searches_stack_ratio_h3.csv")
+summary(data)
+
+data$Subject_Race <- factor(data$Subject_Race,
+                         levels=unique(data$Subject_Race))
+
+data$Search_by_Stop <- floor(data$Search_by_Stop*100)
+
+data
+
+
+
+contingency_table <- matrix(data = c(data$Search_by_Stop), ncol = 15, byrow = TRUE)
+contingency_table
+colnames(contingency_table) <- c('CT', 'RI', 'CA', 'AZ', 'MO', 'WI', 'NC', 'CO', 'TX', 'LA', 'MD', 'VT', 'PA', 'TN', 'MA')
+
+rownames(contingency_table) <- c('white','hispanic', 'black', 'asian/pacific islander')
+
+contingency_table <- as.table(contingency_table)
+
+chisq.test(contingency_table)
+```
+```{r, fig.height=6,fig.width=10}
+library("gplots")
+balloonplot(t(contingency_table), main ="Search Rate", xlab ="", ylab="",
+            label = FALSE, show.margins = FALSE)
+```
+
+```{r, fig.height=10,fig.width=10}
+library("graphics")
+mosaicplot(contingency_table, shade = TRUE, las=2,
+           main = "Search Rate")
+```
+
+
+```{r}
+data <- read.csv("/home/radhikesh/Documents/iiith/sem6/BRSM/Project/data_pp/results_contraband_found_search_stack_ratio_h3.csv")
+
+data$Subject_Race <- factor(data$Subject_Race,
+                         levels=unique(data$Subject_Race))
+
+data$Contraband_by_Search <- floor(data$Contraband_by_Search*100)
+
+print(data)
+
+contingency_table <- matrix(data = c(data$Contraband_by_Search), ncol = 15, byrow = TRUE)
+contingency_table
+colnames(contingency_table) <- c('CT', 'RI', 'CA', 'AZ', 'MO', 'WI', 'NC', 'CO', 'TX', 'LA', 'MD', 'VT', 'PA', 'TN', 'MA')
+rownames(contingency_table) <- c('white','hispanic', 'black', 'asian/pacific islander')
+
+contingency_table <- as.table(contingency_table)
+print(contingency_table)
+
+chi_square_test <- chisq.test(contingency_table)
+print(chi_square_test)
+```
+```{r, fig.height=6,fig.width=10}
+library("gplots")
+balloonplot(t(contingency_table), main ="Hit Rate", xlab ="", ylab="",
+            label = FALSE, show.margins = FALSE)
+```
+```{r, fig.height=10,fig.width=10}
+library("graphics")
+mosaicplot(contingency_table, shade = TRUE, las=2,
+           main = "Contraband Found Rate")
+```
+
+```{r}
+library(coin)
+
+oneway_test(Contraband_by_Search ~ Subject_Race,
+            data = data)
+```
+
+```{r}
+library(rcompanion)
+
+PT = pairwisePermutationTest(Contraband_by_Search ~ Subject_Race,
+                             data     = data,
+                             method   = "fdr")
+
+PT
+```
+
+
+# Additional Work
+```{r}
+# Load the necessary packages
+library(readr)  # For reading CSV files
+library(dplyr)  # For data manipulation
+library(tidyr)  # For data manipulation
+library(broom)  # For tidy model output
+library(car)
+library(ggplot2)
+library(corrplot)
+library(scales)
+library(reshape2)
+library(tidyverse)
+
+# Load the data from CSV
+data <- read_csv("/home/radhikesh/Documents/iiith/sem6/BRSM/Project/data_pp/sampled_data.csv")
+# data <- read_csv("/home/radhikesh/Documents/iiith/sem6/BRSM/Project/data_pp/Statewise/AZ.csv")
+
+data <- data %>%
+  mutate(subject_race = as.factor(subject_race),
+         subject_sex = as.factor(subject_sex),
+         search_conducted = as.factor(search_conducted),
+         arrest_made = as.factor(arrest_made),
+         region = as.factor(region),
+         contraband_found = as.factor(contraband_found),
+         outcome = as.factor(outcome)
+         )
+```
+
+```{r}
+library(ggplot2)
+
+# Define custom color palette
+my_colors <- c("skyblue", "lightgreen", "red", "orange", "lightblue", "lightcoral")
+
+
+# Bar plot of subject_sex
+ggplot(data, aes(x = subject_sex, fill = subject_sex)) +
+  geom_bar() +
+  labs(title = "Distribution of Subject Sex") +
+  theme_minimal() +
+  scale_fill_manual(values = my_colors) +
+  theme(legend.position = "none")
+```
+```{r}
+# Bar plot of subject_race
+ggplot(data, aes(x = subject_race, fill = subject_race)) +
+  geom_bar() +
+  labs(title = "Distribution of Subject Race") +
+  theme_minimal() +
+  scale_fill_manual(values = my_colors) +
+  theme(legend.position = "none")
+```
+
+```{r}
+
+# Bar plot of search_conducted
+ggplot(data, aes(x = factor(search_conducted), fill = factor(search_conducted))) +
+  geom_bar() +
+  labs(title = "Search Conducted (TRUE/FALSE)") +
+  theme_minimal() +
+  scale_fill_manual(values = my_colors) +
+  scale_x_discrete(labels = c("FALSE" = "Not Conducted", "TRUE" = "Conducted")) +
+  theme(legend.position = "none")
+```
+```{r}
+# Histogram of subject_age
+ggplot(data, aes(x = subject_age, fill = subject_sex)) +
+  geom_histogram(binwidth = 5, color = "black", alpha = 0.7) +
+  geom_density(aes(y = ..count.. * 0.1), color = "darkblue", size = 1) +
+  labs(title = "Distribution of Subject Age") +
+  theme_minimal() +
+  scale_fill_manual(values = my_colors) +
+  theme(legend.position = "right")
+```
+```{r}
+
+# Scatter plot of subject_age vs. subject_race
+ggplot(data, aes(x = subject_race, y = subject_age, fill = subject_race)) +
+  geom_violin(trim = FALSE) +
+  labs(title = "Distribution of Subject Age by Subject Race") +
+  theme_minimal() +
+  scale_fill_manual(values = my_colors) +
+  theme(legend.position = "none")
+```
+```{r}
+# Heatmap of contingency table (subject_sex vs. subject_race)
+cont_table <- table(data$subject_sex, data$subject_race)
+ggplot(data = as.data.frame(cont_table), aes(x = Var1, y = Var2, fill = Freq)) +
+  geom_tile() +
+  labs(title = "Heatmap of Contingency Table (Subject Sex vs. Subject Race)",
+       x = "Subject Sex", y = "Subject Race", fill = "Frequency") +
+  theme_minimal() +
+  scale_fill_gradient(low = "white", high = "coral") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r}
+library(vcd)   # For calculating Cramer's V
+
+# Assuming 'subject_race' and 'subject_sex' are categorical variables
+# Calculate Cramér's V for subject_race and subject_sex
+cramer_v_race <- assocstats(table(data$subject_race, data$search_conducted))$cramer
+cramer_v_sex <- assocstats(table(data$subject_sex, data$search_conducted))$cramer
+cramer_v_age <- assocstats(table(data$subject_age, data$search_conducted))$cramer
+
+# Print Cramér's V values
+print(paste("Cramér's V for subject_race:", cramer_v_race))
+print(paste("Cramér's V for subject_sex:", cramer_v_sex))
+print(paste("Cramér's V for subject_age:", cramer_v_age))
+```
+
+```{r}
+data_subset_search_conducted <- subset(data, search_conducted == TRUE)
+
+cross_table <- table(data_subset_search_conducted$subject_sex, data_subset_search_conducted$subject_race)
+
+# Print heading
+print("Cross Table of Search Conducted")
+print(cross_table)
+
+# Perform chi-square test between subject_sex and subject_race
+chi_square_result <- chisq.test(table(data_subset_search_conducted$subject_sex, data_subset$subject_race))
+
+expected <- chi_square_result$expected
+
+print("Expected")
+print(expected)
+
+print("Chi square result")
+print(chi_square_result)
+```
+
+```{r}
+data_subset_contraband_found <- subset(data, contraband_found == TRUE)
+
+cross_table <- table(data_subset_contraband_found$subject_sex, data_subset_contraband_found$subject_race)
+
+print("Cross Table of Contraband Found")
+print(cross_table)
+
+# Perform chi-square test between subject
+chi_square_result <- chisq.test(table(data_subset_contraband_found$subject_sex, data_subset_contraband_found$subject_race))
+
+expected <- chi_square_result$expected
+
+print("Expected")
+print(expected)
+
+# Print chi-square test result
+print("Chi square result")
+print(chi_square_result)
+```
+
+```{r}
+levels(data$search_conducted)
+
+model_search_1 <- glm(search_conducted ~ subject_age + subject_race + subject_sex + region, data = data, family = binomial)
+
+vif(model_search_1)
+summary(model_search_1)
+
+model_search_2 <- glm(search_conducted ~ subject_age + subject_sex + region, data = data, family = binomial)
+
+vif(model_search_2)
+summary(model_search_2)
+```
+
+
+```{r}
+model_contraband_1 <- glm(contraband_found ~ subject_age + subject_race + subject_sex + region, data = data, family = binomial)
+
+vif(model_contraband_1)
+summary(model_contraband_1)
+
+model_contraband_2 <- glm(contraband_found ~ subject_age + subject_race + subject_sex, data = data, family = binomial)
+
+vif(model_contraband_2)
+summary(model_contraband_2)
+```
